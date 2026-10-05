@@ -1,0 +1,35 @@
+load("@rules_python//python:py_library.bzl", "py_library")
+load("//conda:defs.bzl", "conda_channel", "conda_python_package")
+
+py_library(
+    name = "greet_lib",
+    srcs = ["greet_lib/greet/__init__.py"],
+    imports = ["greet_lib"],
+)
+
+py_library(
+    name = "greet_cli_lib",
+    srcs = ["greet_cli/greet_cli/__init__.py"],
+    imports = ["greet_cli"],
+    deps = [":greet_lib"],
+)
+
+conda_python_package(
+    name = "py-greet",
+    py_deps = [":greet_lib"],
+    version = "0.1.0",
+)
+
+# Same Bazel graph, split into two packages: greet_lib's files are left out
+# here because py-greet already ships them.
+conda_python_package(
+    name = "py-greet-cli",
+    py_deps = [":greet_cli_lib"],
+    deps = [":py-greet"],
+    version = "0.1.0",
+)
+
+conda_channel(
+    name = "channel",
+    packages = [":py-greet-cli"],
+)

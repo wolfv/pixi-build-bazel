@@ -1,0 +1,53 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_python//python:py_binary.bzl", "py_binary")
+load("@rules_python//python:py_library.bzl", "py_library")
+load("//conda:defs.bzl", "conda_channel", "conda_package", "conda_python_package")
+
+exports_files(["pixi.lock"])
+
+# ---- Python: numpy comes from pixi.lock; the interpreter is the conda python
+# registered as a toolchain (@conda//:all), so the ABI matches.
+
+py_library(
+    name = "stats",
+    srcs = ["stats.py"],
+    deps = ["@conda//numpy"],
+)
+
+py_binary(
+    name = "main",
+    srcs = ["main.py"],
+    deps = [":stats"],
+)
+
+# Run requirements are derived from the Bazel deps: `numpy` (locked in pixi.lock).
+conda_python_package(
+    name = "py-stats",
+    py_deps = [":stats"],
+    version = "0.1.0",
+)
+
+# ---- C++: headers + libz.so from the locked zlib package.
+
+cc_binary(
+    name = "zversion",
+    srcs = ["zversion.cc"],
+    deps = ["@conda//zlib"],
+)
+
+# `libzlib >=1.3.2,<2.0a0` is added automatically from zlib's run_exports.
+conda_package(
+    name = "zversion-pkg",
+    bins = [":zversion"],
+    package_name = "zversion",
+    version = "0.1.0",
+)
+
+conda_channel(
+    name = "channel",
+    packages = [
+        ":py-stats",
+        ":zversion-pkg",
+        "//examples/pixi_deps/ext:py-fastmath",
+    ],
+)

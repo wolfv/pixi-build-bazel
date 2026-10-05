@@ -1,0 +1,14 @@
+/bazel-*
+/.pixi
+/tools/conda_builder/target
+/backends/pixi-build-bazel/target
+/examples/pixi_deps/.pixi
+/examples/pixi_build/**/.pixi
+/examples/pixi_build/bazel-*
+/examples/monorepo/bazel-*
+/examples/monorepo/.pixi
+/examples/monorepo/third_party/.pixi
+/examples/monorepo-consumer/.pixi
+MODULE.bazel.lock
+/output
+__pycache__/

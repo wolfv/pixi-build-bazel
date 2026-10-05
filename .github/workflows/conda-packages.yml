@@ -1,0 +1,92 @@
+# Builds the conda packages (pixi-build-bazel and its bazelisk dependency)
+# and, for `v*` tags, uploads them to https://prefix.dev/wolfv/experiments
+# with trusted publishing (no API key; GitHub's OIDC token is used).
+name: conda packages
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Upload to prefix.dev/wolfv/experiments
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHANNEL: wolfv/experiments
+
+jobs:
+  build:
+    name: build (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: linux-64 }
+          - { os: ubuntu-24.04-arm, target: linux-aarch64 }
+          - { os: macos-latest, target: osx-arm64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e # v0.10.2
+        with:
+          run-install: false
+      - name: Version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: echo "PIXI_BUILD_BAZEL_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - name: Build packages
+        run: >-
+          pixi exec --spec "rattler-build>=0.74,<1" --
+          rattler-build build --recipe-dir recipes --output-dir output
+          --channel conda-forge --log-style plain
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: conda-${{ matrix.target }}
+          path: output/${{ matrix.target }}/*.conda
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # trusted publishing to prefix.dev
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: conda-*
+          path: dist
+          merge-multiple: true
+      - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e # v0.10.2
+        with:
+          run-install: false
+      - name: Upload to prefix.dev
+        run: >-
+          pixi exec --spec "rattler-build>=0.74,<1" --
+          rattler-build upload prefix --channel "$CHANNEL" --skip-existing dist/*.conda
+
+  examples:
+    name: examples (bazel + pixi, linux-64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e # v0.10.2
+        with:
+          run-install: false
+      - name: Monorepo example (plain Bazel, pixi inside and outside the repo)
+        run: examples/monorepo/try.sh --fresh

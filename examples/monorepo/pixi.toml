@@ -1,0 +1,26 @@
+# The monorepo's own pixi workspace. Its [package] is the Bazel workspace:
+# every `conda_package` target is an output (pixi-build-bazel), and the
+# environment below depends on some of those outputs from this very source.
+[workspace]
+name = "greet-monorepo"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+preview = ["pixi-build"]
+
+[package]
+name = "greet-monorepo"
+version = "0.1.0"
+
+[package.build]
+backend = { name = "pixi-build-bazel", version = "*", channels = ["https://prefix.dev/wolfv/experiments", "conda-forge"] }
+
+[dependencies]
+# Built from this repository by Bazel; `libgreet` comes along as their
+# dependency. pixi asks Bazel which outputs exist and builds only these.
+greet-cli = { path = "." }
+py-greet = { path = "." }
+python = "3.12.*"
+
+[tasks]
+greet = "greet monorepo"
+py-greet = "python -c 'import greet; print(greet.greet(\"python\"))'"

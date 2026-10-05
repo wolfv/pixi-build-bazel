@@ -1,0 +1,19 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_rattler//conda:defs.bzl", "conda_package")
+
+cc_binary(
+    name = "greet",
+    srcs = ["main.cc"],
+    dynamic_deps = ["//libgreet:greet_shared"],
+    deps = ["//libgreet:greet_lib"],
+)
+
+# bin/greet, linked against lib/libgreet.so of the `libgreet` package.
+conda_package(
+    name = "greet-cli",
+    bins = [":greet"],
+    deps = ["//libgreet"],
+    license = "MIT",
+    summary = "Command line greeter",
+    version = "0.1.0",
+)

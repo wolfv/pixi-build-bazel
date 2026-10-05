@@ -1,0 +1,14 @@
+# The conda_builder binary used by all rules. Defaults to the prebuilt one;
+# this repository's .bazelrc points it at the from-source build.
+label_flag(
+    name = "conda_builder",
+    build_setting_default = "@conda_builder//:conda_builder",
+    visibility = ["//visibility:public"],
+)
+
+# rattler-build, used by conda_package (`rattler-build package create`).
+label_flag(
+    name = "rattler_build",
+    build_setting_default = "@rattler_build//:rattler_build",
+    visibility = ["//visibility:public"],
+)

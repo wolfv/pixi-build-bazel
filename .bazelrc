@@ -1,0 +1,8 @@
+build --incompatible_strict_action_env
+
+# The conda-forge bazel keeps its output root inside the pixi environment,
+# i.e. inside this repo, where the repo contents cache refuses to live.
+common --repo_contents_cache=
+
+# Use the from-source conda_builder when developing rules_rattler itself.
+common --//tools:conda_builder=//tools/conda_builder

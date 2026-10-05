@@ -1,0 +1,36 @@
+context:
+  # CI sets this from the git tag (v0.1.0 -> 0.1.0).
+  version: ${{ env.get("PIXI_BUILD_BAZEL_VERSION", default="0.1.0") }}
+
+package:
+  name: pixi-build-bazel
+  version: ${{ version }}
+
+source:
+  path: ../../backends/pixi-build-bazel
+
+build:
+  number: 0
+  # The Bazel rules' recipe packager is Unix-only for now.
+  skip: win
+  script:
+    - cargo install --locked --root "$PREFIX" --path . --no-track
+
+requirements:
+  build:
+    - ${{ compiler('rust') }}
+    - ${{ compiler('c') }}
+  run:
+    # The build protocol version it speaks (that of pixi v0.76.1).
+    - pixi-build-api-version >=6,<7
+    # Runs Bazel at the version in the workspace's .bazelversion.
+    - bazelisk
+
+tests:
+  - script:
+      - pixi-build-bazel --version
+
+about:
+  homepage: https://github.com/wolfv/pixi-build-bazel
+  repository: https://github.com/wolfv/pixi-build-bazel
+  summary: Experimental pixi build backend for Bazel workspaces (rules_rattler conda_package targets)

@@ -1,0 +1,18 @@
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+
+exports_files(["defs.bzl"])
+
+# How conda_package creates the .conda file:
+# - "recipe" (default): generate a rattler-build recipe that copies the files
+#   into $PREFIX and run a released `rattler-build build`.
+# - "package-create": `rattler-build package create` with a JSON manifest
+#   (reproducible archives; needs an unreleased rattler-build).
+string_flag(
+    name = "packager",
+    build_setting_default = "recipe",
+    values = [
+        "recipe",
+        "package-create",
+    ],
+    visibility = ["//visibility:public"],
+)

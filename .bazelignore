@@ -1,0 +1,8 @@
+.pixi
+# Copied into other workspaces; not buildable here.
+integrations
+examples/pixi_deps/.pixi
+backends
+examples/pixi_build
+examples/monorepo
+examples/monorepo-consumer

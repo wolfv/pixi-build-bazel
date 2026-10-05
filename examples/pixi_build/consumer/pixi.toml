@@ -1,0 +1,13 @@
+[workspace]
+name = "pixi-build-consumer"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+preview = ["pixi-build"]
+
+[dependencies]
+# One output of the Bazel workspace one directory up.
+zversion = { path = ".." }
+
+[tasks]
+zversion = "zversion"
+greeting = "cat $CONDA_PREFIX/share/greeting/greeting.txt"

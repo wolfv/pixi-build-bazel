@@ -1,0 +1,60 @@
+module(
+    name = "rules_rattler",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "bazel_skylib", version = "1.9.2")
+bazel_dep(name = "rules_pkg", version = "1.3.0")
+bazel_dep(name = "rules_python", version = "1.9.2")
+bazel_dep(name = "rules_cc", version = "0.2.25")
+
+# The packaging tool. Consumers get a prebuilt binary; this repository builds
+# it from source (see the dev dependencies below and .bazelrc).
+conda_builder = use_extension("//conda:extensions.bzl", "conda_builder")
+use_repo(conda_builder, "conda_builder")
+
+# rattler-build: creates packages (`rattler-build package create`) and uploads them.
+rattler_build = use_extension("//conda:extensions.bzl", "rattler_build")
+use_repo(rattler_build, "rattler_build")
+
+# Metadata injected by pixi-build-bazel (empty unless pixi drives the build).
+pixi_build_context = use_extension("//conda:extensions.bzl", "pixi_build_context")
+use_repo(pixi_build_context, "rules_rattler_pixi_context")
+
+# ---- dev only: build conda_builder from source, examples ----
+
+bazel_dep(name = "rules_rust", version = "0.74.0", dev_dependency = True)
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust", dev_dependency = True)
+rust.toolchain(
+    edition = "2021",
+    versions = ["1.93.1"],
+)
+use_repo(rust, "rust_toolchains")
+
+register_toolchains(
+    "@rust_toolchains//:all",
+    dev_dependency = True,
+)
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate", dev_dependency = True)
+crate.from_cargo(
+    name = "rattler_crates",
+    cargo_lockfile = "//tools/conda_builder:Cargo.lock",
+    manifests = ["//tools/conda_builder:Cargo.toml"],
+)
+use_repo(crate, "rattler_crates")
+
+# Example: conda packages from a pixi.lock as Bazel dependencies.
+pixi = use_extension("//conda:extensions.bzl", "pixi", dev_dependency = True)
+pixi.workspace(
+    name = "conda",
+    lock = "//examples/pixi_deps:pixi.lock",
+)
+use_repo(pixi, "conda")
+
+register_toolchains(
+    "@conda//:all",
+    dev_dependency = True,
+)

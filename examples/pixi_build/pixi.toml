@@ -1,0 +1,28 @@
+# One manifest, two roles:
+# - [package]: the Bazel workspace as a pixi source package. Every
+#   `conda_package` target is an output, built by pixi-build-bazel.
+# - the `host` environment: what Bazel compiles against (`@conda//...`),
+#   locked in pixi.lock and read by rules_rattler's `pixi` extension.
+[workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+preview = ["pixi-build"]
+
+[package]
+name = "pixi-build-example"
+version = "0.1.0"
+
+[package.build]
+backend = { name = "pixi-build-bazel", version = "*", channels = ["https://prefix.dev/wolfv/experiments", "conda-forge"] }
+
+[package.build.config]
+# "lock" (default): Bazel builds against the `host` environment from pixi.lock,
+# pixi installs nothing for the build. "pixi": pixi solves and installs a host
+# environment per output and Bazel builds against that.
+host-environment = "lock"
+
+[feature.host.dependencies]
+zlib = "*"
+
+[environments]
+host = { features = ["host"], no-default-feature = true }

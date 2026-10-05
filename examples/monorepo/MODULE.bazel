@@ -1,0 +1,19 @@
+module(name = "greet_monorepo")
+
+bazel_dep(name = "rules_rattler", version = "0.0.0")
+local_path_override(
+    module_name = "rules_rattler",
+    path = "../..",
+)
+
+bazel_dep(name = "rules_cc", version = "0.2.25")
+bazel_dep(name = "rules_pkg", version = "1.3.0")
+bazel_dep(name = "rules_python", version = "1.9.2")
+
+# Third-party conda packages the code compiles against (`@conda//zlib`).
+pixi = use_extension("@rules_rattler//conda:extensions.bzl", "pixi")
+pixi.workspace(
+    name = "conda",
+    lock = "//third_party:pixi.lock",
+)
+use_repo(pixi, "conda")

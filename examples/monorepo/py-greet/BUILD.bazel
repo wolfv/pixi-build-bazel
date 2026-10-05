@@ -1,0 +1,18 @@
+load("@rules_python//python:py_library.bzl", "py_library")
+load("@rules_rattler//conda:defs.bzl", "conda_python_package")
+
+py_library(
+    name = "greet",
+    srcs = ["greet/__init__.py"],
+    imports = ["."],
+)
+
+# noarch: python; loads lib/libgreet.so from the environment at runtime.
+conda_python_package(
+    name = "py-greet",
+    deps = ["//libgreet"],
+    license = "MIT",
+    py_deps = [":greet"],
+    summary = "Python bindings for libgreet",
+    version = "0.1.0",
+)

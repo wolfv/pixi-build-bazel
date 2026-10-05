@@ -1,0 +1,75 @@
+# Conda packages for Intrinsic Core, built from source inside the upstream
+# Bazel workspace. Copied to `packaging/conda/BUILD` by `apply.sh`.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+load("@rules_rattler//conda:defs.bzl", "conda_channel")
+load(":apis_targets.bzl", "APIS_PY_TARGETS")
+load(":defs.bzl", "ic_package", "ic_python_package")
+
+# --- inctl (Go) -------------------------------------------------------------
+
+pkg_files(
+    name = "inctl_bin",
+    srcs = ["//intrinsic/tools/inctl:inctl_external"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "bin",
+    renames = {"//intrinsic/tools/inctl:inctl_external": "inctl"},
+)
+
+ic_package(
+    name = "inctl",
+    srcs = [":inctl_bin"],
+    # cgo binary built against the upstream sysroot; uses GLIBC_2.29 symbols.
+    depends = ["__glibc >=2.29"],
+    summary = "inctl, the command line interface for Intrinsic Core",
+)
+
+# --- Python -----------------------------------------------------------------
+
+# All generated protobuf/gRPC Python modules of the intrinsic_apis module.
+ic_python_package(
+    name = "intrinsic-apis-python",
+    bundle = ["intrinsic_apis"],
+    py_deps = APIS_PY_TARGETS,
+    summary = "Generated protobuf/gRPC Python APIs of Intrinsic Core",
+)
+
+# The Solution Building Library, minus everything intrinsic-apis-python ships.
+ic_python_package(
+    name = "intrinsic-sdk-python",
+    deps = [":intrinsic-apis-python"],
+    py_deps = [
+        "//intrinsic_sdk/intrinsic/solutions:behavior_tree",
+        "//intrinsic_sdk/intrinsic/solutions:deployments",
+        "//intrinsic_sdk/intrinsic/solutions:execution",
+        "//intrinsic_sdk/intrinsic/solutions:simulation",
+        "//intrinsic_sdk/intrinsic/solutions:worlds",
+    ],
+    summary = "Intrinsic Core Solution Building Library (intrinsic.solutions)",
+)
+
+# pybind11 extensions, compiled against the locked python from pixi.lock
+# (build with --config=conda). Pins python / python_abi automatically.
+# //intrinsic/geometry/api/python:io and //intrinsic/world/python:geometry_types
+# are left out: upstream's tinygltf archive checksum no longer matches.
+ic_python_package(
+    name = "intrinsic-core-ext",
+    deps = [":intrinsic-sdk-python"],
+    py_deps = [
+        "//intrinsic/util/proto:source_code_info_view_py",
+        "//intrinsic_control/intrinsic/icon/control/algorithms/python:directional_stiffness",
+        "//intrinsic_control/intrinsic/icon/control/algorithms/python:overdamping",
+        "//intrinsic_sdk/intrinsic/platform/pubsub/python:pubsub",
+    ],
+    python = "@conda//python",
+    summary = "Compiled (pybind11) extension modules of Intrinsic Core",
+)
+
+conda_channel(
+    name = "channel",
+    packages = [
+        ":inctl",
+        ":intrinsic-core-ext",
+        ":intrinsic-sdk-python",
+    ],
+)

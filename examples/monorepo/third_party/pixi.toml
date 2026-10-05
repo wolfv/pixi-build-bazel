@@ -1,0 +1,9 @@
+# Third-party conda packages Bazel compiles against (`@conda//...`). Kept
+# out of the monorepo's own pixi.lock: that one is solved *with* Bazel.
+[workspace]
+name = "greet-monorepo-third-party"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+zlib = "*"

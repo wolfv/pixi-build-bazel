@@ -1,0 +1,10 @@
+# Host environment for the compiled parts of Intrinsic Core: the Python the
+# pybind11 extensions are built against. Locked into pixi.lock and consumed by
+# Bazel through rules_rattler's `pixi` module extension.
+[workspace]
+name = "intrinsic-core-host"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+python = "3.12.*"

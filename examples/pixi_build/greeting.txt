@@ -1,0 +1,1 @@
+Greetings from a Bazel workspace, built by pixi!

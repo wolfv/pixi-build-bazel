@@ -1,0 +1,35 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink")
+load("//conda:defs.bzl", "conda_package")
+
+platform(
+    name = "macos_arm64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+)
+
+pkg_files(
+    name = "greet_bin",
+    srcs = ["greet.sh"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "bin",
+    renames = {"greet.sh": "greet"},
+)
+
+pkg_mklink(
+    name = "hi_link",
+    link_name = "bin/hi",
+    target = "greet",
+)
+
+# `bazel build //examples/script:greet --platforms=//examples/script:macos_arm64`
+# produces an osx-arm64 package.
+conda_package(
+    name = "greet",
+    srcs = [
+        ":greet_bin",
+        ":hi_link",
+    ],
+    version = "0.1.0",
+)

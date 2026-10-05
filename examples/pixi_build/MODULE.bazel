@@ -1,0 +1,21 @@
+module(name = "pixi_build_example")
+
+bazel_dep(name = "rules_rattler", version = "0.0.0")
+local_path_override(
+    module_name = "rules_rattler",
+    path = "../..",
+)
+
+bazel_dep(name = "rules_cc", version = "0.2.25")
+bazel_dep(name = "rules_pkg", version = "1.3.0")
+
+# What `@conda//...` targets come from: the `host` environment of this
+# workspace's pixi.lock (also with pixi-build-bazel's default
+# `host-environment = "lock"`).
+pixi = use_extension("@rules_rattler//conda:extensions.bzl", "pixi")
+pixi.workspace(
+    name = "conda",
+    environment = "host",
+    lock = "//:pixi.lock",
+)
+use_repo(pixi, "conda")

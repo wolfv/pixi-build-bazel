@@ -1,0 +1,55 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+load("@rules_rattler//conda:defs.bzl", "conda_package")
+
+exports_files(["pixi.lock"])
+
+# Three outputs in one workspace. A consumer that only needs `zversion` makes
+# pixi build `zversion` and its sibling `greeting-data`, not `unused-tool`.
+
+pkg_files(
+    name = "greeting_files",
+    srcs = ["greeting.txt"],
+    prefix = "share/greeting",
+)
+
+conda_package(
+    name = "greeting-data",
+    srcs = [":greeting_files"],
+    license = "MIT",
+    noarch = "generic",
+    version = "1.0.0",
+)
+
+cc_binary(
+    name = "zversion_bin",
+    srcs = ["zversion.cc"],
+    deps = ["@conda//zlib"],
+)
+
+pkg_files(
+    name = "zversion_files",
+    srcs = [":zversion_bin"],
+    prefix = "bin",
+    renames = {":zversion_bin": "zversion"},
+    attributes = pkg_attributes(mode = "0755"),
+)
+
+# zlib becomes a host dependency (pixi solves it and applies its run_exports),
+# greeting-data a dependency on another output of this workspace.
+conda_package(
+    name = "zversion",
+    srcs = [":zversion_files"],
+    deps = [":greeting-data"],
+    license = "MIT",
+    summary = "Prints the zlib version",
+    version = "0.2.0",
+)
+
+conda_package(
+    name = "unused-tool",
+    srcs = ["greeting.txt"],
+    noarch = "generic",
+    prefix = "share/unused",
+    version = "0.0.1",
+)

@@ -1,0 +1,34 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_python//python:py_library.bzl", "py_library")
+load("@rules_python//python:py_test.bzl", "py_test")
+load("//conda:defs.bzl", "conda_python_package")
+
+# A CPython extension compiled against the *locked* python's headers
+# (provided through the py_cc_toolchain registered by `@conda//:all`).
+cc_binary(
+    name = "fastmath.so",
+    srcs = ["fastmath.c"],
+    linkshared = True,
+    deps = ["@rules_python//python/cc:current_py_cc_headers"],
+)
+
+py_library(
+    name = "fastmath",
+    data = [":fastmath.so"],
+    imports = ["."],
+)
+
+py_test(
+    name = "fastmath_test",
+    srcs = ["fastmath_test.py"],
+    deps = [":fastmath"],
+)
+
+# Platform specific (linux-64 / osx-arm64), pinned to python 3.12 + python_abi.
+conda_python_package(
+    name = "py-fastmath",
+    py_deps = [":fastmath"],
+    python = "@conda//python",
+    version = "0.1.0",
+    visibility = ["//visibility:public"],
+)

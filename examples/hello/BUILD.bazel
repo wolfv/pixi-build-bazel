@@ -1,0 +1,55 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("//conda:defs.bzl", "conda_channel", "conda_package", "conda_upload")
+
+cc_binary(
+    name = "hello",
+    srcs = ["hello.cc"],
+)
+
+# rules_pkg mappings give full control over install paths and modes.
+pkg_files(
+    name = "greeting_files",
+    srcs = ["greeting.txt"],
+    prefix = "share/hello",
+)
+
+conda_package(
+    name = "hello-data",
+    srcs = [":greeting_files"],
+    license = "MIT",
+    noarch = "generic",
+    summary = "Data files for hello",
+    version = "1.0.0",
+)
+
+conda_package(
+    name = "hello-cc",
+    bins = [":hello"],
+    # External dependencies are plain MatchSpecs ...
+    depends = ["libstdcxx >=13"],
+    # ... in-repo ones are labels and get pinned automatically.
+    deps = [":hello-data"],
+    homepage = "https://github.com/prefix-dev/rules_rattler",
+    license = "MIT",
+    summary = "Hello world, built with Bazel",
+    version = "1.0.0",
+)
+
+# A file:// channel containing hello-cc and (transitively) hello-data.
+conda_channel(
+    name = "channel",
+    packages = [":hello-cc"],
+)
+
+# bazel run //examples/hello:upload -- --api-key ...
+conda_upload(
+    name = "upload",
+    args = [
+        "--channel",
+        "my-channel",
+        "--skip-existing",
+    ],
+    packages = [":hello-cc"],
+    server = "prefix",
+)
