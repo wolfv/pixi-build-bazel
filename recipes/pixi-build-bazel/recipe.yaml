@@ -7,14 +7,15 @@ package:
   version: ${{ version }}
 
 source:
-  path: ../../backends/pixi-build-bazel
+  # The repository root (for LICENSE); .gitignore'd files are skipped.
+  path: ../..
 
 build:
   number: 0
   # The Bazel rules' recipe packager is Unix-only for now.
   skip: win
   script:
-    - cargo install --locked --root "$PREFIX" --path . --no-track
+    - cargo install --locked --root "$PREFIX" --path backends/pixi-build-bazel --no-track
 
 requirements:
   build:
@@ -31,6 +32,8 @@ tests:
       - pixi-build-bazel --version
 
 about:
+  license: BSD-3-Clause
+  license_file: LICENSE
   homepage: https://github.com/wolfv/pixi-build-bazel
   repository: https://github.com/wolfv/pixi-build-bazel
   summary: Experimental pixi build backend for Bazel workspaces (rules_rattler conda_package targets)

@@ -3,6 +3,7 @@ name = "pixi-build-bazel"
 version = "0.1.0"
 edition = "2024"
 description = "Experimental pixi build backend: every `conda_package` target of a Bazel workspace is a conda output"
+license = "BSD-3-Clause"
 publish = false
 
 [dependencies]
